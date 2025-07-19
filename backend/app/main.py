@@ -5,7 +5,8 @@ import logging
 from app.core.config import settings
 from app.api import auth, repositories, analytics, projects
 from app.core.database import engine
-from app.models import Base
+from app.models.base import BaseModel
+from app.core.database import Base
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

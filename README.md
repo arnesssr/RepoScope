@@ -65,7 +65,31 @@ git clone https://github.com/arnesssr/RepoScope.git
 cd RepoScope
 ```
 
-### 2. Backend Setup
+### 2. Option A: Using PowerShell Scripts (Windows - Recommended)
+
+Open two separate PowerShell windows:
+
+**Window 1 - Backend:**
+```powershell
+cd C:\Users\user\RepoScope
+.\start-backend.ps1
+```
+
+**Window 2 - Frontend:**
+```powershell
+cd C:\Users\user\RepoScope
+.\start-frontend.ps1
+```
+
+These scripts will automatically:
+- Set up virtual environments
+- Install all dependencies
+- Create .env files from templates
+- Start both servers
+
+### 2. Option B: Manual Setup
+
+#### Backend Setup
 
 ```bash
 cd backend
@@ -92,10 +116,10 @@ cp .env.example .env
 alembic upgrade head
 
 # Start the backend server
-uvicorn main:app --reload
+uvicorn app.main:app --reload
 ```
 
-### 3. Frontend Setup
+#### Frontend Setup
 
 ```bash
 cd frontend
@@ -113,6 +137,12 @@ cp .env.example .env
 bun run dev
 # Or
 npm run dev
+```
+
+### 3. Option C: Using Docker Compose
+
+```bash
+docker-compose up
 ```
 
 ### 4. Access the application
