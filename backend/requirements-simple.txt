@@ -1,0 +1,31 @@
+# Core - Minimal requirements to get started
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-dotenv==1.0.0
+
+# Auth & Security
+cryptography==41.0.7  # Pre-built wheel version
+python-jose==3.3.0  # Without cryptography extra
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+httpx==0.26.0
+
+# Git Repository Analysis
+gitpython==3.1.41
+
+# AI/ML
+google-generativeai==0.3.2
+
+# Database
+sqlalchemy==2.0.25
+aiosqlite==0.19.0  # SQLite async driver for development
+# Use SQLite for testing instead of PostgreSQL
+# asyncpg==0.29.0
+
+# API
+pydantic==1.10.13  # Older version with pre-built wheels
+# pydantic-settings==2.1.0  # Not needed for pydantic v1
+
+# Basic Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3

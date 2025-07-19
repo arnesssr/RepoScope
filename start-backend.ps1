@@ -16,7 +16,13 @@ Write-Host "Activating virtual environment..." -ForegroundColor Yellow
 
 # Install dependencies
 Write-Host "Installing dependencies..." -ForegroundColor Yellow
-pip install -r requirements.txt
+# Try simplified requirements if full requirements fail
+if (Test-Path ".\requirements-simple.txt") {
+    Write-Host "Using simplified requirements for easier setup..." -ForegroundColor Cyan
+    pip install -r requirements-simple.txt
+} else {
+    pip install -r requirements.txt
+}
 
 # Create .env file if it doesn't exist
 if (-Not (Test-Path ".\.env")) {

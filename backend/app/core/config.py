@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic import BaseSettings
 from typing import Optional, List
 from functools import lru_cache
 
@@ -55,7 +55,7 @@ class Settings(BaseSettings):
     ANALYSIS_CACHE_TTL_SECONDS: int = 3600  # 1 hour
     
     # AI Configuration
-    GEMINI_MODEL: str = "gemini-pro"
+    GEMINI_MODEL: str = "gemini-2.0-flash"
     AI_REQUEST_TIMEOUT: int = 30
     MAX_AI_RETRIES: int = 3
     

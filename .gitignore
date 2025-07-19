@@ -86,3 +86,6 @@ Desktop.ini
 *.pem
 *.key
 *.crt
+
+# Project Planning (local only)
+PROJECT_ROADMAP.md

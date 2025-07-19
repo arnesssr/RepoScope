@@ -1,5 +1,4 @@
 from sqlalchemy import Column, String, Boolean, Integer, ForeignKey, JSON, DateTime
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 from app.models.base import BaseModel
@@ -15,15 +14,15 @@ class Repository(Base, BaseModel):
     description = Column(String(1000), nullable=True)
     
     # Owner
-    owner_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    owner_id = Column(String(36), ForeignKey("users.id"), nullable=False)
     owner = relationship("User", back_populates="repositories")
     
     # Repository details
     private = Column(Boolean, default=False)
     fork = Column(Boolean, default=False)
-    created_at_github = Column(DateTime(timezone=True), nullable=True)
-    updated_at_github = Column(DateTime(timezone=True), nullable=True)
-    pushed_at = Column(DateTime(timezone=True), nullable=True)
+    created_at_github = Column(DateTime, nullable=True)
+    updated_at_github = Column(DateTime, nullable=True)
+    pushed_at = Column(DateTime, nullable=True)
     
     # Repository stats
     size = Column(Integer, default=0)  # KB
@@ -44,7 +43,7 @@ class Repository(Base, BaseModel):
     html_url = Column(String(500), nullable=True)
     
     # Analysis metadata
-    last_analyzed = Column(DateTime(timezone=True), nullable=True)
+    last_analyzed = Column(DateTime, nullable=True)
     analysis_status = Column(String(50), default="pending")  # pending, analyzing, completed, failed
     
     # Cached metrics
