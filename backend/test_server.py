@@ -74,12 +74,14 @@ async def github_callback(code: str):
         )
         
         if token_response.status_code != 200:
+            logger.error(f"GitHub token exchange failed: {token_response.text}")
             raise HTTPException(status_code=400, detail="Failed to get access token")
         
         token_data = token_response.json()
         access_token = token_data.get("access_token")
         
         if not access_token:
+            logger.error(f"No access token in response: {token_data}")
             raise HTTPException(status_code=400, detail="No access token received")
         
         # Get user info
@@ -92,18 +94,50 @@ async def github_callback(code: str):
         )
         
         if user_response.status_code != 200:
+            logger.error(f"Failed to get user info: {user_response.text}")
             raise HTTPException(status_code=400, detail="Failed to get user info")
         
         user_data = user_response.json()
+        
+        # Get user email if not public
+        email_response = await client.get(
+            "https://api.github.com/user/emails",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Accept": "application/json"
+            }
+        )
+        
+        email = user_data.get('email')
+        if email_response.status_code == 200:
+            emails = email_response.json()
+            primary_email = next((e['email'] for e in emails if e['primary']), None)
+            if primary_email:
+                email = primary_email
         
         # Store access token in a simple session (in production, use JWT)
         # For now, we'll pass it as a query param (not secure for production!)
         import base64
         encoded_token = base64.b64encode(access_token.encode()).decode()
         
-        return RedirectResponse(
-            url=f"http://localhost:3000/dashboard?login=success&user={user_data.get('login')}&token={encoded_token}"
-        )
+        # Return JSON response instead of redirect for SPA
+        return {
+            "access_token": encoded_token,
+            "user": {
+                "username": user_data.get('login'),
+                "name": user_data.get('name'),
+                "email": email,
+                "avatar_url": user_data.get('avatar_url'),
+                "bio": user_data.get('bio'),
+                "company": user_data.get('company'),
+                "location": user_data.get('location'),
+                "blog": user_data.get('blog'),
+                "twitter_username": user_data.get('twitter_username'),
+                "public_repos": user_data.get('public_repos'),
+                "followers": user_data.get('followers'),
+                "following": user_data.get('following')
+            }
+        }
 
 @app.get("/api/repositories")
 async def get_repositories(token: str):
