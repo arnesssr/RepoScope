@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import RedirectResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.database import get_db
+# from sqlalchemy.ext.asyncio import AsyncSession
+# from app.core.database import get_db
 from app.core.config import settings
 import httpx
 from typing import Optional
@@ -24,8 +24,7 @@ async def github_login():
 @router.get("/github/callback")
 async def github_callback(
     code: str = Query(...),
-    state: Optional[str] = None,
-    db: AsyncSession = Depends(get_db)
+    state: Optional[str] = None
 ):
     """Handle GitHub OAuth callback"""
     # Exchange code for access token

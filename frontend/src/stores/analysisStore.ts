@@ -31,18 +31,18 @@ export const useAnalysisStore = create<AnalysisState>()(
       analysisHistory: {},
       selectedRepository: null,
 
-      analyzeRepository: async (repositoryId: string, token: string) => {
+  analyzeRepository: async (repositoryFullName: string, token: string) => {
         set({ isAnalyzing: true, analysisError: null });
         
         try {
-          const result = await apiService.analyzeRepository(repositoryId, token);
+          const result = await apiService.analyzeRepository(repositoryFullName, token);
           
           set((state) => ({
             currentAnalysis: result,
             isAnalyzing: false,
             analysisHistory: {
               ...state.analysisHistory,
-              [repositoryId]: [result, ...(state.analysisHistory[repositoryId] || [])]
+              [repositoryFullName]: [result, ...(state.analysisHistory[repositoryFullName] || [])]
             }
           }));
         } catch (error) {

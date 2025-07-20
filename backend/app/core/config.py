@@ -1,4 +1,4 @@
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 from typing import Optional, List
 from functools import lru_cache
 
@@ -15,8 +15,8 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     
     # GitHub OAuth
-    GITHUB_CLIENT_ID: str
-    GITHUB_CLIENT_SECRET: str
+    GITHUB_CLIENT_ID: str = "your-github-client-id"
+    GITHUB_CLIENT_SECRET: str = "your-github-client-secret"
     GITHUB_REDIRECT_URI: str = "http://localhost:3000/auth/callback"
     
     # Security
@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     JWT_EXPIRATION_HOURS: int = 24
     
     # Gemini API
-    GEMINI_API_KEY: str
+    GEMINI_API_KEY: str = "your-gemini-api-key"
     
     # Frontend URL (for CORS)
     FRONTEND_URL: str = "http://localhost:3000"

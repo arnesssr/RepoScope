@@ -98,17 +98,41 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis }) =>
           <div className="space-y-3">
             <div>
               <h4 className="text-sm font-medium text-gray-400">Development Focus</h4>
-              <p className="text-white mt-1">{commit_analysis.development_focus}</p>
+              {Array.isArray(commit_analysis.development_focus) ? (
+                <ul className="mt-2 space-y-1">
+                  {commit_analysis.development_focus.map((focus, index) => (
+                    <li key={index} className="text-white text-sm">• {focus}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-white mt-1">{commit_analysis.development_focus}</p>
+              )}
             </div>
             <div>
               <h4 className="text-sm font-medium text-gray-400">Commit Patterns</h4>
-              <p className="text-white mt-1">{commit_analysis.commit_patterns}</p>
+              {Array.isArray(commit_analysis.commit_patterns) ? (
+                <ul className="mt-2 space-y-1">
+                  {commit_analysis.commit_patterns.map((pattern, index) => (
+                    <li key={index} className="text-white text-sm">• {pattern}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-white mt-1">{commit_analysis.commit_patterns}</p>
+              )}
             </div>
             <div>
               <h4 className="text-sm font-medium text-gray-400">Team Dynamics</h4>
-              <p className="text-white mt-1">{commit_analysis.team_dynamics}</p>
+              {Array.isArray(commit_analysis.team_dynamics) ? (
+                <ul className="mt-2 space-y-1">
+                  {commit_analysis.team_dynamics.map((dynamic, index) => (
+                    <li key={index} className="text-white text-sm">• {dynamic}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-white mt-1">{commit_analysis.team_dynamics}</p>
+              )}
             </div>
-            {commit_analysis.suggested_improvements.length > 0 && (
+            {commit_analysis.suggested_improvements && commit_analysis.suggested_improvements.length > 0 && (
               <div>
                 <h4 className="text-sm font-medium text-gray-400">Suggested Improvements</h4>
                 <ul className="mt-2 space-y-1">
@@ -126,7 +150,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis }) =>
       )}
 
       {/* Project Plan */}
-      {project_plan && (
+      {project_plan && project_plan.project_plan && (
         <Card className="p-6">
           <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-purple-400" />
@@ -134,11 +158,11 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis }) =>
           </h3>
           
           {/* Milestones */}
-          {project_plan.milestones.length > 0 && (
+          {project_plan.project_plan.milestones.length > 0 && (
             <div className="mb-6">
               <h4 className="text-sm font-medium text-gray-400 mb-3">Milestones</h4>
               <div className="space-y-3">
-                {project_plan.milestones.map((milestone, index) => (
+                {project_plan.project_plan.milestones.map((milestone, index) => (
                   <div key={index} className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -158,11 +182,11 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis }) =>
           )}
 
           {/* Immediate Tasks */}
-          {project_plan.immediate_tasks.length > 0 && (
+          {project_plan.project_plan.immediate_tasks.length > 0 && (
             <div className="mb-6">
               <h4 className="text-sm font-medium text-gray-400 mb-3">Immediate Tasks</h4>
               <ul className="space-y-2">
-                {project_plan.immediate_tasks.map((task, index) => (
+                {project_plan.project_plan.immediate_tasks.map((task, index) => (
                   <li key={index} className="flex items-center gap-2 text-white">
                     <CheckCircle2 className="w-4 h-4 text-green-400" />
                     <span className="text-sm">{task}</span>
@@ -173,11 +197,11 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis }) =>
           )}
 
           {/* Technical Debt */}
-          {project_plan.technical_debt.length > 0 && (
+          {project_plan.project_plan.technical_debt.length > 0 && (
             <div>
               <h4 className="text-sm font-medium text-gray-400 mb-3">Technical Debt</h4>
               <ul className="space-y-2">
-                {project_plan.technical_debt.map((debt, index) => (
+                {project_plan.project_plan.technical_debt.map((debt, index) => (
                   <li key={index} className="flex items-center gap-2 text-white">
                     <AlertCircle className="w-4 h-4 text-yellow-400" />
                     <span className="text-sm">{debt}</span>

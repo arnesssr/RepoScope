@@ -1,11 +1,17 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams, useNavigate } from 'react-router-dom'
-import { GitBranch, GitCommit, Users, Star, ChevronDown } from 'lucide-react'
+import { GitBranch, GitCommit, Users, Star, ChevronDown, Loader2 } from 'lucide-react'
 import { StatsCard } from '../../components/dashboard/StatsCard'
 import { RecentActivity } from '../../components/dashboard/RecentActivity'
 import { QuickActions } from '../../components/dashboard/QuickActions'
 import { EmptyDashboard } from '../../components/dashboard/EmptyDashboard'
+import { RepositorySelector } from '../../components/repository/RepositorySelector'
+import { useRepositories } from '../../hooks/useRepositories'
+import { useAnalysisStore } from '../../stores/analysisStore'
+import { useAuthStore } from '../../stores/authStore'
+import { Repository } from '../../types'
+import toast from 'react-hot-toast'
 
 interface DashboardStats {
   totalRepositories: number
@@ -23,54 +29,68 @@ interface DashboardStats {
 
 const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('7d')
+  const [showRepoSelector, setShowRepoSelector] = useState(false)
   const { repoId } = useParams<{ repoId: string }>()
   const navigate = useNavigate()
-
-  const handleAddRepo = () => {
-    // Implement the logic to add a new repository
-    alert('Add New Repository functionality goes here')
+  
+  // Store hooks
+  const token = useAuthStore((state) => state.token)
+  const { 
+    currentAnalysis, 
+    isAnalyzing, 
+    analyzeRepository,
+    setSelectedRepository 
+  } = useAnalysisStore()
+  
+  // Fetch repositories
+  const { data: repositories, isLoading: reposLoading } = useRepositories()
+  
+  // Find current repository
+  const currentRepo = repositories?.find(repo => repo.id.toString() === repoId)
+  
+  // Set selected repository in store when repoId changes
+  useEffect(() => {
+    if (repoId) {
+      setSelectedRepository(repoId)
+    }
+  }, [repoId, setSelectedRepository])
+  
+  // Handle repository selection
+  const handleSelectRepo = (repo: Repository) => {
+    navigate(`/dashboard/${repo.id}`)
+    setShowRepoSelector(false)
   }
-
-  // Mock query for demonstration purposes
-  const { data: stats, isLoading } = useQuery<DashboardStats>({
-    queryKey: ['dashboard-stats', timeRange, repoId],
-    queryFn: async () => {
-      if (!repoId) return null
-      // Mock data for the selected repository
-      return {
-        totalRepositories: 12,
-        totalCommits: 342,
-        totalContributors: 8,
-        totalStars: 156,
-        recentActivity: [
-          {
-            id: '1',
-            type: 'commit',
-            description: 'Fixed authentication flow in dashboard',
-            timestamp: new Date().toISOString(),
-            repository: 'RepoScope'
-          },
-          {
-            id: '2',
-            type: 'commit',
-            description: 'Added neon-styled UI components',
-            timestamp: new Date(Date.now() - 3600000).toISOString(),
-            repository: 'RepoScope'
-          },
-          {
-            id: '3',
-            type: 'pr',
-            description: 'Merged PR #42: Update dashboard layout',
-            timestamp: new Date(Date.now() - 7200000).toISOString(),
-            repository: 'frontend-pms'
-          }
-        ]
-      }
-    },
-    enabled: !!repoId,
-    refetchInterval: false,
-    refetchOnMount: false,
-  })
+  
+  // Handle analyze repository
+  const handleAnalyze = async () => {
+    if (!currentRepo || !token) return
+    
+    try {
+      toast.loading('Analyzing repository...', { id: 'analyze' })
+      await analyzeRepository(currentRepo.full_name, token)
+      toast.success('Analysis complete!', { id: 'analyze' })
+      navigate(`/dashboard/analysis/${currentRepo.id}`)
+    } catch (error) {
+      toast.error('Analysis failed. Please try again.', { id: 'analyze' })
+    }
+  }
+  
+  // Calculate stats from analysis or use defaults
+  const stats: DashboardStats | null = currentAnalysis ? {
+    totalRepositories: 1,
+    totalCommits: currentAnalysis.summary?.total_commits || 0,
+    totalContributors: currentAnalysis.summary?.contributors || 0,
+    totalStars: currentRepo?.stargazers_count || 0,
+    recentActivity: currentAnalysis.recent_commits?.slice(0, 5).map((commit, index) => ({
+      id: commit.sha,
+      type: 'commit',
+      description: commit.message.split('\n')[0],
+      timestamp: commit.date,
+      repository: currentRepo?.name || ''
+    })) || []
+  } : null
+  
+  const isLoading = reposLoading
 
   const statCards = !stats
     ? []
@@ -101,9 +121,22 @@ const Dashboard = () => {
         }
       ]
 
-  // Show empty state if no repository is selected
+// Show empty state if no repository is selected
   if (!repoId) {
-    return <EmptyDashboard onSelectRepo={handleAddRepo} />
+    return (
+      <div className="text-center mt-8">
+        <h2 className="text-xl font-bold text-white">No repository selected</h2>
+        <p className="text-gray-400 mt-2">Please select a repository to get started.</p>
+        <div className="mt-4">
+          <RepositorySelector 
+            repositories={repositories || []} 
+            selectedRepo={null} 
+            onSelectRepo={handleSelectRepo} 
+            isLoading={reposLoading}
+          />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -120,12 +153,25 @@ const Dashboard = () => {
             </p>
           </div>
           
-          {/* Repository Selector */}
-          <button className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-all duration-200 border border-gray-700">
-            <GitBranch className="w-4 h-4" />
-            <span className="font-medium">{repoId || 'Select Repository'}</span>
-            <ChevronDown className="w-4 h-4 ml-2" />
-          </button>
+{/* Repository Selector */}
+          <div className="flex items-center">
+            <RepositorySelector 
+              repositories={repositories || []} 
+              selectedRepo={currentRepo || null} 
+              onSelectRepo={handleSelectRepo} 
+              isLoading={reposLoading}
+            />
+            {isAnalyzing ? (
+              <Loader2 className="ml-4 animate-spin" />
+            ) : (
+              <button 
+                onClick={handleAnalyze} 
+                className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all duration-200"
+              >
+                Analyze
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Time Range Selector */}

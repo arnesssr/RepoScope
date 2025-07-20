@@ -6,6 +6,7 @@ import { useAnalysisStore } from '../../stores/analysisStore';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/ui/Card';
 import { AnalysisResults } from '../../components/analysis/AnalysisResults';
+import apiService from '../../services/api';
 
 const Analysis = () => {
   const { repoId } = useParams<{ repoId: string }>();
@@ -32,7 +33,16 @@ const Analysis = () => {
     if (!repoId || !token) return;
     
     try {
-      await analyzeRepository(repoId, token);
+      // Get repository details to find full_name
+      const repositories = await apiService.getRepositories(token);
+      const repo = repositories?.find(r => r.id.toString() === repoId);
+      
+      if (!repo) {
+        console.error('Repository not found');
+        return;
+      }
+      
+      await analyzeRepository(repo.full_name, token);
     } catch (error) {
       console.error('Analysis failed:', error);
     }

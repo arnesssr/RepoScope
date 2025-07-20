@@ -3,10 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 from app.core.config import settings
-from app.api import auth, repositories, analytics, projects
-from app.core.database import engine
-from app.models.base import BaseModel
-from app.core.database import Base
+from app.api import auth, repositories
+# Disabled due to database dependencies:
+# from app.api import analytics, projects
+# Commented out due to Python 3.13 compatibility issues
+# from app.core.database import engine
+# from app.models.base import BaseModel
+# from app.core.database import Base
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,9 +21,6 @@ async def lifespan(app: FastAPI):
     """Handle application startup and shutdown events"""
     # Startup
     logger.info("Starting up RepoScope API...")
-    # Create database tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
     yield
     # Shutdown
     logger.info("Shutting down RepoScope API...")
@@ -39,7 +39,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL],
+    allow_origins=[settings.FRONTEND_URL, "http://localhost:5173"],  # Support both ports
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -48,8 +48,8 @@ app.add_middleware(
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(repositories.router, prefix="/api/repositories", tags=["Repositories"])
-app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
-app.include_router(projects.router, prefix="/api/projects", tags=["Projects"])
+# app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])  # Disabled due to DB dependency
+# app.include_router(projects.router, prefix="/api/projects", tags=["Projects"])  # Disabled due to DB dependency
 
 
 @app.get("/")

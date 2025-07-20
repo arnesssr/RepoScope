@@ -1,11 +1,11 @@
-import { clsx } from 'clsx';
-import { motion } from 'framer-motion';
+import React from 'react';
+import { LucideIcon } from 'lucide-react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
-  icon?: React.ReactNode;
+  icon?: LucideIcon;
   children: React.ReactNode;
 }
 
@@ -13,7 +13,7 @@ export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   size = 'md',
   loading = false,
-  icon,
+  icon: Icon,
   children,
   className,
   disabled,
@@ -22,9 +22,9 @@ export const Button: React.FC<ButtonProps> = ({
   const baseClasses = 'font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2';
   
   const variants = {
-    primary: 'bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:from-primary-600 hover:to-primary-700',
-    secondary: 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600',
-    ghost: 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800',
+    primary: 'bg-cyan-500 text-white hover:bg-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.3)]',
+    secondary: 'bg-gray-800 text-gray-200 hover:bg-gray-700 border border-gray-700',
+    ghost: 'bg-transparent text-gray-300 hover:bg-gray-800',
     danger: 'bg-red-500 text-white hover:bg-red-600',
   };
 
@@ -37,23 +37,23 @@ export const Button: React.FC<ButtonProps> = ({
   const isDisabled = disabled || loading;
 
   return (
-    <motion.button
-      whileHover={!isDisabled ? { scale: 1.05 } : {}}
-      whileTap={!isDisabled ? { scale: 0.95 } : {}}
-      className={clsx(
-        baseClasses,
-        variants[variant],
-        sizes[size],
-        isDisabled && 'opacity-50 cursor-not-allowed',
-        className
-      )}
+    <button
+      className={`
+        ${baseClasses}
+        ${variants[variant]}
+        ${sizes[size]}
+        ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
+        ${className || ''}
+      `}
       disabled={isDisabled}
       {...props}
     >
       {loading ? (
         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-      ) : icon}
+      ) : Icon ? (
+        <Icon className="w-4 h-4" />
+      ) : null}
       {children}
-    </motion.button>
+    </button>
   );
 };

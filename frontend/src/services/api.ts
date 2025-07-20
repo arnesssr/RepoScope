@@ -22,8 +22,8 @@ export const apiService = {
   },
 
   // Analysis methods
-  async analyzeRepository(repositoryId: string, token: string): Promise<AnalysisResult> {
-    const response = await apiClient.post(`/api/repositories/${repositoryId}/analyze`, null, {
+  async analyzeRepository(repositoryFullName: string, token: string): Promise<AnalysisResult> {
+    const response = await apiClient.post(`/api/repositories/${repositoryFullName}/analyze`, null, {
       params: { token },
     });
     return response.data;

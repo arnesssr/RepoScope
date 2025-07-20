@@ -23,10 +23,11 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
   )
 
   return (
-    <div className="relative">
+    <div className="relative w-full max-w-md">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-gray-950 border border-gray-800 rounded-lg hover:border-cyan-500/50 transition-all group"
+        disabled={isLoading}
       >
         <div className="flex items-center gap-3">
           <GitBranch className="h-5 w-5 text-cyan-400" />
