@@ -6,6 +6,17 @@ import LandingPage from './pages/Landing'
 import Dashboard from './pages/Dashboard'
 import AuthCallback from './pages/Auth/Callback'
 import DashboardLayout from './components/layout/DashboardLayout'
+import Repositories from './pages/Repositories'
+import Commits from './pages/Commits'
+import Contributors from './pages/Contributors'
+import Analytics from './pages/Analytics'
+import Planning from './pages/Planning'
+import Threats from './pages/Threats'
+import Timeline from './pages/Timeline'
+import Activity from './pages/Activity'
+import Files from './pages/Files'
+import Settings from './pages/Settings'
+import Analysis from './pages/Analysis'
 import { useThemeStore } from './stores/themeStore'
 
 const queryClient = new QueryClient({
@@ -39,13 +50,17 @@ function App() {
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Dashboard />} />
             <Route path=":repoId" element={<Dashboard />} />
-            <Route path="repositories" element={<div className="text-white">Repositories page coming soon...</div>} />
-            <Route path="commits" element={<div className="text-white">Commits page coming soon...</div>} />
-            <Route path="contributors" element={<div className="text-white">Contributors page coming soon...</div>} />
-            <Route path="analytics" element={<div className="text-white">Analytics page coming soon...</div>} />
-            <Route path="activity" element={<div className="text-white">Activity page coming soon...</div>} />
-            <Route path="files" element={<div className="text-white">Files page coming soon...</div>} />
-            <Route path="settings" element={<div className="text-white">Settings page coming soon...</div>} />
+            <Route path="repositories" element={<Repositories />} />
+            <Route path="commits" element={<Commits />} />
+            <Route path="contributors" element={<Contributors />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="planning" element={<Planning />} />
+            <Route path="threats" element={<Threats />} />
+            <Route path="timeline" element={<Timeline />} />
+            <Route path="activity" element={<Activity />} />
+            <Route path="files" element={<Files />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="analysis/:repoId" element={<Analysis />} />
           </Route>
         </Routes>
       </Router>

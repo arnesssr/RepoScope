@@ -22,10 +22,22 @@ export const apiService = {
   },
 
   // Analysis methods
-  async analyzeRepository(repository: Repository, token: string): Promise<AnalysisResult> {
-    const response = await apiClient.post('/api/analyze', repository, {
+  async analyzeRepository(repositoryId: string, token: string): Promise<AnalysisResult> {
+    const response = await apiClient.post(`/api/repositories/${repositoryId}/analyze`, null, {
       params: { token },
     });
+    return response.data;
+  },
+
+  // Get analysis status
+  async getAnalysisStatus(analysisId: string): Promise<AnalysisResult> {
+    const response = await apiClient.get(`/api/analysis/${analysisId}`);
+    return response.data;
+  },
+
+  // Get repository analysis history
+  async getRepositoryAnalyses(repositoryId: string): Promise<AnalysisResult[]> {
+    const response = await apiClient.get(`/api/repositories/${repositoryId}/analyses`);
     return response.data;
   },
 
