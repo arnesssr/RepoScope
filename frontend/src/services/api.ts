@@ -15,12 +15,19 @@ export const apiClient = axios.create({
 export const apiService = {
   // Repository methods
   async getRepositories(token: string): Promise<Repository[]> {
-    const response = await apiClient.get('/api/repositories', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data.repositories;
+    console.log('Getting repositories with token:', token ? 'Token exists' : 'No token');
+    try {
+      const response = await apiClient.get('/api/repositories', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log('Repository API response:', response.data);
+      return response.data.repositories || [];
+    } catch (error) {
+      console.error('Repository API error:', error);
+      throw error;
+    }
   },
 
   // Analysis methods

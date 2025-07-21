@@ -39,6 +39,14 @@ def read_root():
 def health_check():
     return {"status": "healthy"}
 
+@app.get("/api/test")
+def test_endpoint():
+    return {
+        "message": "API is working",
+        "frontend_url": FRONTEND_URL,
+        "github_configured": bool(GITHUB_CLIENT_ID)
+    }
+
 @app.get("/api/auth/github")
 async def github_login():
     """Redirect to GitHub OAuth page"""
@@ -110,11 +118,15 @@ async def github_callback(code: str):
 @app.get("/api/repositories")
 async def list_repositories(authorization: str = Header(None)):
     """List user's GitHub repositories"""
+    print(f"Repositories endpoint called with auth header: {bool(authorization)}")
+    
     if not authorization or not authorization.startswith("Bearer "):
+        print(f"Invalid authorization header: {authorization}")
         raise HTTPException(status_code=401, detail="Authorization header missing or invalid")
     
     # Extract the token from the Bearer format
     token = authorization.replace("Bearer ", "")
+    print(f"Token extracted: {token[:10]}..." if token else "No token")
     
     async with httpx.AsyncClient() as client:
         # Fetch user's repositories from GitHub
@@ -131,10 +143,14 @@ async def list_repositories(authorization: str = Header(None)):
             }
         )
         
+        print(f"GitHub API response status: {repos_response.status_code}")
+        
         if repos_response.status_code != 200:
-            raise HTTPException(status_code=400, detail="Failed to fetch repositories")
+            print(f"GitHub API error: {repos_response.text}")
+            raise HTTPException(status_code=400, detail=f"Failed to fetch repositories: {repos_response.status_code}")
         
         repos_data = repos_response.json()
+        print(f"Found {len(repos_data)} repositories")
         
         # Transform the data to match frontend expectations
         repositories = []
