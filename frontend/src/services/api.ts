@@ -16,7 +16,9 @@ export const apiService = {
   // Repository methods
   async getRepositories(token: string): Promise<Repository[]> {
     const response = await apiClient.get('/api/repositories', {
-      params: { token },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
     return response.data.repositories;
   },

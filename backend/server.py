@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 import httpx
@@ -108,13 +108,56 @@ async def github_callback(code: str):
         }
 
 @app.get("/api/repositories")
-async def list_repositories():
-    """List repositories (mock data for now)"""
-    return {
-        "repositories": [],
-        "total": 0,
-        "message": "Implement repository listing"
-    }
+async def list_repositories(authorization: str = Header(None)):
+    """List user's GitHub repositories"""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authorization header missing or invalid")
+    
+    # Extract the token from the Bearer format
+    token = authorization.replace("Bearer ", "")
+    
+    async with httpx.AsyncClient() as client:
+        # Fetch user's repositories from GitHub
+        repos_response = await client.get(
+            "https://api.github.com/user/repos",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/json"
+            },
+            params={
+                "per_page": 100,
+                "sort": "pushed",
+                "direction": "desc"
+            }
+        )
+        
+        if repos_response.status_code != 200:
+            raise HTTPException(status_code=400, detail="Failed to fetch repositories")
+        
+        repos_data = repos_response.json()
+        
+        # Transform the data to match frontend expectations
+        repositories = []
+        for repo in repos_data:
+            repositories.append({
+                "id": repo["id"],
+                "name": repo["name"],
+                "full_name": repo["full_name"],
+                "description": repo["description"],
+                "language": repo["language"],
+                "stargazers_count": repo["stargazers_count"],
+                "forks_count": repo["forks_count"],
+                "updated_at": repo["updated_at"],
+                "html_url": repo["html_url"],
+                "private": repo["private"],
+                "size": repo["size"],
+                "default_branch": repo["default_branch"]
+            })
+        
+        return {
+            "repositories": repositories,
+            "total": len(repositories)
+        }
 
 @app.get("/api/analytics/dashboard/{repo_id}")
 async def get_dashboard_metrics(repo_id: str):
