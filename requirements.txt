@@ -1,2 +1,2 @@
-# Backend dependencies
--r backend/requirements.txt
+# Backend dependencies - using minimal requirements for deployment
+-r backend/requirements-minimal.txt

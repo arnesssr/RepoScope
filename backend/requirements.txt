@@ -31,8 +31,8 @@ aiocache==0.12.2
 # numpy==1.26.3  # Commented out - compilation issues
 
 # API & Webhooks
-pydantic==2.5.3
-pydantic-settings==2.1.0
+pydantic==2.8.2
+pydantic-settings==2.3.4
 
 # Testing
 pytest==7.4.4
