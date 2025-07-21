@@ -11,9 +11,12 @@ load_dotenv()
 app = FastAPI(title="RepoScope API")
 
 # CORS configuration
+# Get frontend URL from environment
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[FRONTEND_URL],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -91,14 +94,11 @@ async def github_callback(code: str):
         
         user_data = user_response.json()
         
-        # For now, just return the user data
-        # In production, you would:
-        # 1. Create/update user in database
-        # 2. Generate JWT token
-        # 3. Redirect to frontend with token
+        # Return the access token and user data
+        # Frontend expects access_token field
         
         return {
-            "message": "Authentication successful",
+            "access_token": access_token,
             "user": {
                 "username": user_data.get("login"),
                 "name": user_data.get("name"),
