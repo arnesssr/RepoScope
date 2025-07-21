@@ -1,55 +1,112 @@
-import React from 'react'
-import { Activity } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
+import React from 'react';
+import { motion } from 'framer-motion';
+import { GitCommit, GitBranch, GitPullRequest, Clock } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
-interface ActivityItem {
-  id: string
-  type: string
-  description: string
-  timestamp: string
-  repository: string
+interface Activity {
+  id: string;
+  type: 'commit' | 'branch' | 'pr';
+  title: string;
+  description?: string;
+  author: string;
+  timestamp: Date;
+  url?: string;
 }
 
 interface RecentActivityProps {
-  activities: ActivityItem[]
-  isLoading: boolean
+  activities?: Activity[];
+  loading?: boolean;
 }
 
-export const RecentActivity: React.FC<RecentActivityProps> = ({ activities, isLoading }) => {
-  return (
-    <div className="bg-gray-950 border border-gray-800 rounded-xl p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-          <Activity className="h-5 w-5 text-cyan-400" />
+const activityIcons = {
+  commit: GitCommit,
+  branch: GitBranch,
+  pr: GitPullRequest,
+};
+
+const activityColors = {
+  commit: 'text-blue-600 bg-blue-100 dark:bg-blue-900/20',
+  branch: 'text-green-600 bg-green-100 dark:bg-green-900/20',
+  pr: 'text-purple-600 bg-purple-100 dark:bg-purple-900/20',
+};
+
+export const RecentActivity: React.FC<RecentActivityProps> = ({
+  activities = [],
+  loading = false,
+}) => {
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Recent Activity
-        </h2>
-      </div>
-      
-      <div className="space-y-4">
-        {isLoading ? (
-          <p className="text-gray-400">Loading activity...</p>
-        ) : activities.length === 0 ? (
-          <p className="text-gray-400">No recent activity</p>
-        ) : (
-          activities.slice(0, 5).map((activity) => (
-            <div key={activity.id} className="flex items-start gap-3 group">
-              <div className="mt-1 p-2 rounded-lg bg-cyan-500/10 text-cyan-400 group-hover:shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all">
-                <Activity className="h-4 w-4" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-300">
-                  {activity.description}
-                </p>
-                <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
-                  <span>{activity.repository}</span>
-                  <span>•</span>
-                  <span>{formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}</span>
+        </h3>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="animate-pulse">
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
                 </div>
               </div>
             </div>
-          ))
-        )}
+          ))}
+        </div>
       </div>
-    </div>
-  )
-}
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.1 }}
+      className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm"
+    >
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        Recent Activity
+      </h3>
+      {activities.length === 0 ? (
+        <div className="text-center py-8">
+          <Clock className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+          <p className="text-gray-500 dark:text-gray-400">No recent activity</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {activities.slice(0, 5).map((activity, index) => {
+            const Icon = activityIcons[activity.type];
+            const colorClass = activityColors[activity.type];
+            
+            return (
+              <motion.div
+                key={activity.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                className="flex items-start space-x-3"
+              >
+                <div className={`p-2 rounded-lg ${colorClass}`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    {activity.title}
+                  </p>
+                  {activity.description && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                      {activity.description}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    by {activity.author} • {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
+                  </p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+    </motion.div>
+  );
+};

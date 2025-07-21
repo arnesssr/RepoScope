@@ -39,9 +39,6 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     {
       title: 'Repository',
       items: [
-        { name: 'Repositories', href: '/dashboard/repositories', icon: GitBranch },
-        { name: 'Commits', href: '/dashboard/commits', icon: GitCommit },
-        { name: 'Contributors', href: '/dashboard/contributors', icon: Users },
         { name: 'Files', href: '/dashboard/files', icon: FolderOpen },
       ]
     },

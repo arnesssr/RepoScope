@@ -124,16 +124,19 @@ const Dashboard = () => {
 // Show empty state if no repository is selected
   if (!repoId) {
     return (
-      <div className="text-center mt-8">
-        <h2 className="text-xl font-bold text-white">No repository selected</h2>
-        <p className="text-gray-400 mt-2">Please select a repository to get started.</p>
-        <div className="mt-4">
-          <RepositorySelector 
-            repositories={repositories || []} 
-            selectedRepo={null} 
-            onSelectRepo={handleSelectRepo} 
-            isLoading={reposLoading}
-          />
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="text-center max-w-md">
+          <div className="relative">
+            <GitBranch className="w-20 h-20 text-gray-700 mx-auto mb-6" />
+            <div className="absolute inset-0 blur-3xl bg-cyan-500/20 rounded-full" />
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-3">Welcome to RepoScope</h2>
+          <p className="text-gray-400 text-lg mb-2">Start by selecting a repository from the dropdown above</p>
+          <div className="flex items-center justify-center gap-2 text-gray-500">
+            <ChevronDown className="w-4 h-4 animate-bounce" />
+            <span className="text-sm">Use the repository selector in the header</span>
+            <ChevronDown className="w-4 h-4 animate-bounce" />
+          </div>
         </div>
       </div>
     )
@@ -153,25 +156,30 @@ const Dashboard = () => {
             </p>
           </div>
           
-{/* Repository Selector */}
-          <div className="flex items-center">
-            <RepositorySelector 
-              repositories={repositories || []} 
-              selectedRepo={currentRepo || null} 
-              onSelectRepo={handleSelectRepo} 
-              isLoading={reposLoading}
-            />
-            {isAnalyzing ? (
-              <Loader2 className="ml-4 animate-spin" />
-            ) : (
-              <button 
-                onClick={handleAnalyze} 
-                className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all duration-200"
-              >
-                Analyze
-              </button>
-            )}
-          </div>
+{/* Current Repository Info */}
+          {currentRepo && (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-lg">
+                <GitBranch className="h-4 w-4 text-cyan-400" />
+                <span className="text-sm text-gray-300">{currentRepo.full_name}</span>
+                <Star className="h-4 w-4 text-yellow-400 ml-2" />
+                <span className="text-sm text-gray-300">{currentRepo.stargazers_count}</span>
+              </div>
+              {isAnalyzing ? (
+                <div className="flex items-center gap-2 text-cyan-400">
+                  <Loader2 className="animate-spin h-5 w-5" />
+                  <span className="text-sm">Analyzing...</span>
+                </div>
+              ) : (
+                <button 
+                  onClick={handleAnalyze} 
+                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-all duration-200 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)]"
+                >
+                  Run Analysis
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Time Range Selector */}

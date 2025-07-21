@@ -92,31 +92,102 @@ class GitService:
         """
         repo = Repo(repo_path)
         
-        # Get contributors
-        contributors = {}
+        # Get contributors - merge by name to avoid duplicates
+        contributors_by_name = {}
+        email_to_name = {}  # Track email to name mapping
+        
         for commit in repo.iter_commits():
-            author = commit.author.email
-            if author not in contributors:
-                contributors[author] = {
-                    'name': commit.author.name,
+            author_email = commit.author.email
+            author_name = commit.author.name
+            
+            # Use name as the key to merge same person with different emails
+            if author_name not in contributors_by_name:
+                # Try to get GitHub username from email
+                github_username = None
+                avatar_url = None
+                
+                # Common GitHub email patterns
+                if 'users.noreply.github.com' in author_email:
+                    # Extract username from noreply email
+                    parts = author_email.split('@')[0].split('+')
+                    if len(parts) > 1:
+                        github_username = parts[1]
+                    else:
+                        github_username = parts[0]
+                
+                # If we have a GitHub username, construct avatar URL
+                if github_username:
+                    avatar_url = f"https://avatars.githubusercontent.com/{github_username}"
+                else:
+                    # Use Gravatar as fallback
+                    import hashlib
+                    email_hash = hashlib.md5(author_email.lower().encode('utf-8')).hexdigest()
+                    avatar_url = f"https://www.gravatar.com/avatar/{email_hash}?d=identicon&s=100"
+                
+                contributors_by_name[author_name] = {
+                    'name': author_name,
+                    'email': author_email,  # Primary email
+                    'emails': [author_email],  # All emails used
+                    'github_username': github_username,
+                    'avatar_url': avatar_url,
                     'commits': 0,
                     'additions': 0,
                     'deletions': 0
                 }
-            contributors[author]['commits'] += 1
-            contributors[author]['additions'] += commit.stats.total['insertions']
-            contributors[author]['deletions'] += commit.stats.total['deletions']
+            else:
+                # Add email to the list if not already there
+                if author_email not in contributors_by_name[author_name]['emails']:
+                    contributors_by_name[author_name]['emails'].append(author_email)
+            
+            # Track email to name mapping
+            email_to_name[author_email] = author_name
+            
+            # Update stats
+            contributors_by_name[author_name]['commits'] += 1
+            contributors_by_name[author_name]['additions'] += commit.stats.total['insertions']
+            contributors_by_name[author_name]['deletions'] += commit.stats.total['deletions']
         
-        # Get file types
+        # Convert back to email-keyed dict for compatibility, but use the primary email
+        contributors = {}
+        for name, data in contributors_by_name.items():
+            primary_email = data['email']
+            contributors[primary_email] = data
+        
+        # Get file types and count lines
         file_types = {}
+        total_lines = 0
+        total_files = 0
+        
         for item in repo.tree().traverse():
             if item.type == 'blob':
                 ext = os.path.splitext(item.path)[1]
                 if ext:
                     file_types[ext] = file_types.get(ext, 0) + 1
+                
+                # Count lines in text files
+                try:
+                    # Only count lines in common text file extensions
+                    text_extensions = ['.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.cpp', '.c', 
+                                     '.h', '.hpp', '.cs', '.rb', '.go', '.rs', '.php', '.swift', 
+                                     '.kt', '.scala', '.r', '.m', '.mm', '.vue', '.dart']
+                    if ext in text_extensions:
+                        content = item.data_stream.read()
+                        if content:
+                            lines = content.decode('utf-8', errors='ignore').count('\n')
+                            total_lines += lines
+                except:
+                    pass  # Skip files that can't be read
+                
+                total_files += 1
+        
+        # Get repository size info
+        repo_size = sum(item.size for item in repo.tree().traverse() if item.type == 'blob')
         
         return {
             'total_commits': len(list(repo.iter_commits())),
+            'total_lines': total_lines,
+            'total_files': total_files,
+            'repository_size': repo_size,  # in bytes
             'contributors': contributors,
             'file_types': file_types,
             'default_branch': repo.active_branch.name,

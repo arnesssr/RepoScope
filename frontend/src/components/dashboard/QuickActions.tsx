@@ -1,130 +1,137 @@
-import React from 'react'
-import { TrendingUp, Rocket, BarChart3, Shield, Calendar, Zap, LucideIcon } from 'lucide-react'
-import { useNavigate, useParams } from 'react-router-dom'
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { 
+  BarChart3, 
+  GitBranch, 
+  Users, 
+  FileCode, 
+  AlertTriangle,
+  Calendar,
+  Play,
+  Settings
+} from 'lucide-react';
 
 interface QuickAction {
-  id: string
-  label: string
-  description: string
-  icon: LucideIcon
-  color: 'cyan' | 'purple' | 'green' | 'yellow'
-  path?: string
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ElementType;
+  path: string;
+  color: string;
 }
 
 interface QuickActionsProps {
-  actions?: QuickAction[]
+  repoId?: string;
 }
 
-const defaultActions: QuickAction[] = [
-  {
-    id: '1',
-    label: 'Create Plan',
-    description: 'Start a new project plan',
-    icon: Rocket,
-    color: 'cyan',
-    path: '/dashboard/planning'
-  },
-  {
-    id: '2',
-    label: 'View Metrics',
-    description: 'Analyze repository statistics',
-    icon: BarChart3,
-    color: 'purple',
-    path: '/dashboard/analytics'
-  },
-  {
-    id: '3',
-    label: 'Security Scan',
-    description: 'Check for threats and vulnerabilities',
-    icon: Shield,
-    color: 'green',
-    path: '/dashboard/threats'
-  },
-  {
-    id: '4',
-    label: 'Timeline View',
-    description: 'Project milestones and deadlines',
-    icon: Calendar,
-    color: 'yellow',
-    path: '/dashboard/timeline'
-  }
-]
+export const QuickActions: React.FC<QuickActionsProps> = ({ repoId }) => {
+  const actions: QuickAction[] = [
+    {
+      id: 'analytics',
+      title: 'Analytics',
+      description: 'View detailed repository analytics',
+      icon: BarChart3,
+      path: repoId ? `/dashboard/analytics?repo=${repoId}` : '/dashboard/analytics',
+      color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+    },
+    {
+      id: 'commits',
+      title: 'Commits',
+      description: 'Browse commit history',
+      icon: GitBranch,
+      path: repoId ? `/dashboard/commits?repo=${repoId}` : '/dashboard/commits',
+      color: 'bg-green-500/10 text-green-600 dark:text-green-400',
+    },
+    {
+      id: 'contributors',
+      title: 'Contributors',
+      description: 'View contributor insights',
+      icon: Users,
+      path: repoId ? `/dashboard/contributors?repo=${repoId}` : '/dashboard/contributors',
+      color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+    },
+    {
+      id: 'files',
+      title: 'Files',
+      description: 'Explore repository structure',
+      icon: FileCode,
+      path: repoId ? `/dashboard/files?repo=${repoId}` : '/dashboard/files',
+      color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
+    },
+    {
+      id: 'threats',
+      title: 'Threats',
+      description: 'Security threat analysis',
+      icon: AlertTriangle,
+      path: repoId ? `/dashboard/threats?repo=${repoId}` : '/dashboard/threats',
+      color: 'bg-red-500/10 text-red-600 dark:text-red-400',
+    },
+    {
+      id: 'timeline',
+      title: 'Timeline',
+      description: 'Project timeline view',
+      icon: Calendar,
+      path: repoId ? `/dashboard/timeline?repo=${repoId}` : '/dashboard/timeline',
+      color: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
+    },
+    {
+      id: 'analyze',
+      title: 'Run Analysis',
+      description: 'Start a new repository analysis',
+      icon: Play,
+      path: repoId ? `/dashboard/analysis/${repoId}` : '/dashboard/repositories',
+      color: 'bg-teal-500/10 text-teal-600 dark:text-teal-400',
+    },
+    {
+      id: 'settings',
+      title: 'Settings',
+      description: 'Configure repository settings',
+      icon: Settings,
+      path: '/dashboard/settings',
+      color: 'bg-gray-500/10 text-gray-600 dark:text-gray-400',
+    },
+  ];
 
-const colorMap = {
-  cyan: {
-    gradient: 'from-cyan-500/10 to-blue-500/10',
-    hover: 'hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)]',
-    iconColor: 'text-cyan-400',
-    iconHover: 'group-hover:drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]'
-  },
-  purple: {
-    gradient: 'from-purple-500/10 to-pink-500/10',
-    hover: 'hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]',
-    iconColor: 'text-purple-400',
-    iconHover: 'group-hover:drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]'
-  },
-  green: {
-    gradient: 'from-green-500/10 to-emerald-500/10',
-    hover: 'hover:border-green-500/50 hover:shadow-[0_0_20px_rgba(34,197,94,0.3)]',
-    iconColor: 'text-green-400',
-    iconHover: 'group-hover:drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]'
-  },
-  yellow: {
-    gradient: 'from-yellow-500/10 to-orange-500/10',
-    hover: 'hover:border-yellow-500/50 hover:shadow-[0_0_20px_rgba(250,204,21,0.3)]',
-    iconColor: 'text-yellow-400',
-    iconHover: 'group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]'
-  }
-}
-
-export const QuickActions: React.FC<QuickActionsProps> = ({ actions = defaultActions }) => {
-  const navigate = useNavigate()
-  const { repoId } = useParams<{ repoId: string }>()
-  
-  // Add analysis action if repository is selected
-  const enhancedActions = React.useMemo(() => {
-    if (repoId) {
-      return [
-        {
-          id: '0',
-          label: 'Analyze Repository',
-          description: 'Run AI-powered analysis',
-          icon: Zap,
-          color: 'purple' as const,
-          path: `/dashboard/analysis/${repoId}`
-        },
-        ...actions
-      ]
-    }
-    return actions
-  }, [actions, repoId])
-  
   return (
-    <div className="bg-gray-950 border border-gray-800 rounded-xl p-6">
-      <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-        <TrendingUp className="h-5 w-5 text-purple-400" />
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.2 }}
+      className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm"
+    >
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
         Quick Actions
-      </h2>
-      
-      <div className="grid grid-cols-2 gap-4">
-        {enhancedActions.map((action) => {
-          const Icon = action.icon
-          const { gradient, hover, iconColor, iconHover } = colorMap[action.color]
+      </h3>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {actions.map((action, index) => {
+          const Icon = action.icon;
           
           return (
-            <button 
+            <motion.div
               key={action.id}
-              onClick={() => action.path && navigate(action.path)}
-              className={`p-6 rounded-lg bg-gradient-to-br ${gradient} border border-gray-800 ${hover} transition-all duration-200 group text-left`}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2, delay: index * 0.05 }}
             >
-              <Icon className={`h-10 w-10 ${iconColor} mb-3 ${iconHover}`} />
-              <p className="text-base font-medium text-white mb-1">{action.label}</p>
-              <p className="text-xs text-gray-400">{action.description}</p>
-            </button>
-          )
+              <Link
+                to={action.path}
+                className="block p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all hover:shadow-md group"
+              >
+                <div className={`p-3 rounded-lg ${action.color} mb-3 group-hover:scale-110 transition-transform`}>
+                  <Icon className="w-6 h-6" />
+                </div>
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                  {action.title}
+                </h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {action.description}
+                </p>
+              </Link>
+            </motion.div>
+          );
         })}
       </div>
-    </div>
-  )
-}
-
+    </motion.div>
+  );
+};

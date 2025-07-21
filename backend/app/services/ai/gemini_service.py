@@ -44,11 +44,13 @@ Commits:
 {commit_messages}
 
 Provide a JSON response with:
-1. development_focus: What features/areas the team is working on
-2. commit_patterns: How the team structures their commits
-3. team_dynamics: Collaboration patterns
-4. suggested_improvements: How they could improve their development process
-5. project_phase: What phase the project appears to be in (early development, mature, maintenance, etc)
+1. development_focus: What features/areas the team is working on (as a string)
+2. commit_patterns: How the team structures their commits (as a string)
+3. team_dynamics: Collaboration patterns (as a string)
+4. suggested_improvements: Array of strings with suggestions for improving development process (not objects, just suggestion strings)
+5. project_phase: What phase the project appears to be in (early development, mature, maintenance, etc) (as a string)
+
+IMPORTANT: suggested_improvements must be an array of strings, NOT objects.
 
 Return only valid JSON."""
 
@@ -96,9 +98,11 @@ Current Project Phase: {commit_analysis.get('project_phase', 'Unknown')}
 
 Generate a realistic project plan with:
 1. milestones: Array of milestone objects with title, description, and estimated_weeks
-2. immediate_tasks: Array of tasks that should be done in the next 2 weeks
-3. technical_debt: Areas that need refactoring or improvement
-4. team_recommendations: Suggestions for team process improvements
+2. immediate_tasks: Array of strings describing tasks that should be done in the next 2 weeks (not objects, just task descriptions as strings)
+3. technical_debt: Array of strings describing areas that need refactoring or improvement (not objects, just descriptions as strings)
+4. team_recommendations: Array of strings with suggestions for team process improvements (not objects, just recommendations as strings)
+
+IMPORTANT: immediate_tasks, technical_debt, and team_recommendations must be arrays of strings, NOT objects.
 
 Return only valid JSON."""
 
@@ -151,10 +155,12 @@ File Types in Repository:
 
 Provide a JSON response with:
 1. quality_score: Overall quality score (0-100)
-2. strengths: Array of positive observations
-3. concerns: Array of potential issues
-4. recommendations: Specific actions to improve code quality
-5. technical_debt_indicators: Signs of technical debt
+2. strengths: Array of strings describing positive observations (not objects, just strings)
+3. concerns: Array of strings describing potential issues (not objects, just strings)
+4. recommendations: Array of strings with specific actions to improve code quality (not objects, just strings)
+5. technical_debt_indicators: Array of strings describing signs of technical debt (not objects, just strings)
+
+IMPORTANT: All arrays must contain strings only, NOT objects.
 
 Return only valid JSON."""
 

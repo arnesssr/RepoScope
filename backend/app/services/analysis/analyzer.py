@@ -74,11 +74,42 @@ class RepositoryAnalyzer:
                     'project_phase': commit_analysis.get('project_phase', 'Unknown'),
                     'quality_score': quality_assessment.get('quality_score', 0)
                 },
-                'repository_stats': repo_stats,
-                'commit_analysis': commit_analysis,
-                'project_plan': project_plan,
-                'quality_assessment': quality_assessment,
-                'recent_commits': commits[:10]  # Include last 10 commits
+                'repository_stats': {
+                    'total_commits': repo_stats['total_commits'],
+                    'total_lines': repo_stats.get('total_lines', 0),
+                    'total_files': repo_stats.get('total_files', 0),
+                    'repository_size': repo_stats.get('repository_size', 0),
+                    'file_types': repo_stats['file_types'],
+                    'contributors': {name: {
+                        'name': data.get('name', name),
+                        'email': data.get('email', name),
+                        'avatar_url': data.get('avatar_url', ''),
+                        'commits': data['commits'],
+                        'additions': data['additions'],
+                        'deletions': data['deletions']
+                    } for name, data in repo_stats['contributors'].items()},
+                    'branches': repo_stats.get('branches', []),
+                    'tags': repo_stats.get('tags', [])
+                },
+                'commit_analysis': {
+                    'development_focus': commit_analysis.get('development_focus', ''),
+                    'commit_patterns': commit_analysis.get('commit_patterns', ''),
+                    'team_dynamics': commit_analysis.get('team_dynamics', ''),
+                    'suggested_improvements': commit_analysis.get('suggested_improvements', [])
+                },
+                'project_plan': {
+                    'milestones': project_plan.get('milestones', []),
+                    'immediate_tasks': project_plan.get('immediate_tasks', []),
+                    'technical_debt': project_plan.get('technical_debt', []),
+                    'team_recommendations': project_plan.get('team_recommendations', [])
+                },
+                'quality_assessment': {
+                    'quality_score': quality_assessment.get('quality_score', 0),
+                    'strengths': quality_assessment.get('strengths', []),
+                    'concerns': quality_assessment.get('concerns', []),
+                    'recommendations': quality_assessment.get('recommendations', [])
+                },
+                'recent_commits': [{'sha': c['sha'], 'author': c['author'], 'date': c['date'], 'message': c['message'], 'additions': c['additions'], 'deletions': c['deletions']} for c in commits[:10]]
             }
             
             # Cleanup

@@ -1,79 +1,66 @@
-import React from 'react'
-import { LucideIcon } from 'lucide-react'
+import React from 'react';
+import { LucideIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface StatsCardProps {
-  name: string
-  value: number | string
-  icon: LucideIcon
-  color: 'cyan' | 'purple' | 'green' | 'yellow'
-  isLoading?: boolean
+  title: string;
+  value: string | number;
+  icon: LucideIcon;
+  description?: string;
+  trend?: {
+    value: number;
+    isPositive: boolean;
+  };
+  color?: 'blue' | 'green' | 'purple' | 'orange';
 }
 
-const colorMap = {
-  cyan: {
-    gradient: 'rgba(6,182,212,0.1), rgba(59,130,246,0.1)',
-    iconColor: 'text-cyan-400',
-    glowColor: 'rgba(6,182,212,0.5)',
-    hoverClass: 'hover:border-cyan-500/50'
-  },
-  purple: {
-    gradient: 'rgba(168,85,247,0.1), rgba(236,72,153,0.1)',
-    iconColor: 'text-purple-400',
-    glowColor: 'rgba(168,85,247,0.5)',
-    hoverClass: 'hover:border-purple-500/50'
-  },
-  green: {
-    gradient: 'rgba(34,197,94,0.1), rgba(16,185,129,0.1)',
-    iconColor: 'text-green-400',
-    glowColor: 'rgba(34,197,94,0.5)',
-    hoverClass: 'hover:border-green-500/50'
-  },
-  yellow: {
-    gradient: 'rgba(250,204,21,0.1), rgba(251,146,60,0.1)',
-    iconColor: 'text-yellow-400',
-    glowColor: 'rgba(250,204,21,0.5)',
-    hoverClass: 'hover:border-yellow-500/50'
-  }
-}
+const colorClasses = {
+  blue: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  green: 'bg-green-500/10 text-green-600 dark:text-green-400',
+  purple: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+  orange: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
+};
 
 export const StatsCard: React.FC<StatsCardProps> = ({
-  name,
+  title,
   value,
   icon: Icon,
-  color,
-  isLoading = false
+  description,
+  trend,
+  color = 'blue',
 }) => {
-  const { gradient, iconColor, glowColor, hoverClass } = colorMap[color]
-
   return (
-    <div
-      className={`relative overflow-hidden rounded-xl border border-gray-800 p-6 transition-all duration-300 hover:scale-105 group ${hoverClass}`}
-      style={{
-        background: `linear-gradient(to bottom right, ${gradient})`
-      }}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
     >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-400">{name}</p>
-          <p className="mt-2 text-3xl font-bold text-white">
-            {isLoading ? '...' : typeof value === 'number' ? value.toLocaleString() : value}
-          </p>
+      <div className="flex items-center justify-between mb-4">
+        <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
+          <Icon className="w-6 h-6" />
         </div>
-        <div 
-          className={`p-3 rounded-lg bg-gray-900/50 ${iconColor}`}
-          style={{
-            boxShadow: `0 0 20px ${glowColor}`
-          }}
-        >
-          <Icon className="h-6 w-6" />
-        </div>
+        {trend && (
+          <div
+            className={`text-sm font-medium ${
+              trend.isPositive ? 'text-green-600' : 'text-red-600'
+            }`}
+          >
+            {trend.isPositive ? '+' : '-'}{Math.abs(trend.value)}%
+          </div>
+        )}
       </div>
-      
-      {/* Decorative gradient orb */}
-      <div 
-        className="absolute -bottom-8 -right-8 h-24 w-24 rounded-full blur-2xl opacity-50"
-        style={{ background: glowColor }}
-      />
-    </div>
-  )
-}
+      <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+        {title}
+      </h3>
+      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+        {value}
+      </p>
+      {description && (
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+          {description}
+        </p>
+      )}
+    </motion.div>
+  );
+};

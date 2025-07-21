@@ -47,13 +47,54 @@ async def github_callback(
         
         if not access_token:
             raise HTTPException(status_code=400, detail="No access token received")
-    
-    # TODO: Get user info from GitHub
-    # TODO: Create or update user in database
-    # TODO: Generate JWT token
-    # TODO: Redirect to frontend with token
-    
-    return {"message": "Authentication successful", "access_token": access_token}
+        
+        # Get user info from GitHub
+        user_response = await client.get(
+            "https://api.github.com/user",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Accept": "application/json"
+            }
+        )
+        
+        if user_response.status_code != 200:
+            raise HTTPException(status_code=400, detail="Failed to get user information")
+        
+        user_data = user_response.json()
+        
+        # Get user email if not public
+        email = user_data.get("email")
+        if not email:
+            email_response = await client.get(
+                "https://api.github.com/user/emails",
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/json"
+                }
+            )
+            if email_response.status_code == 200:
+                emails = email_response.json()
+                # Get primary email
+                for e in emails:
+                    if e.get("primary"):
+                        email = e.get("email")
+                        break
+        
+        # Prepare user object in the format expected by frontend
+        user = {
+            "username": user_data.get("login"),
+            "name": user_data.get("name"),
+            "email": email,
+            "avatar_url": user_data.get("avatar_url")
+        }
+        
+        # TODO: Create or update user in database
+        # TODO: Generate JWT token if needed
+        
+        return {
+            "access_token": access_token,
+            "user": user
+        }
 
 
 @router.post("/logout")
