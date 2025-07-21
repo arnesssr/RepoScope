@@ -6,9 +6,6 @@ import LandingPage from './pages/Landing'
 import Dashboard from './pages/Dashboard'
 import AuthCallback from './pages/Auth/Callback'
 import DashboardLayout from './components/layout/DashboardLayout'
-import Repositories from './pages/Repositories'
-import Commits from './pages/Commits'
-import Contributors from './pages/Contributors'
 import Analytics from './pages/Analytics'
 import Planning from './pages/Planning'
 import Threats from './pages/Threats'
@@ -50,9 +47,6 @@ function App() {
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Dashboard />} />
             <Route path=":repoId" element={<Dashboard />} />
-            <Route path="repositories" element={<Repositories />} />
-            <Route path="commits" element={<Commits />} />
-            <Route path="contributors" element={<Contributors />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="planning" element={<Planning />} />
             <Route path="threats" element={<Threats />} />

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams, useNavigate } from 'react-router-dom'
-import { GitBranch, GitCommit, Users, Star, ChevronDown, Loader2 } from 'lucide-react'
+import { GitBranch, GitCommit, Users, Star, ChevronDown, Loader2, BarChart3, Eye } from 'lucide-react'
 import { StatsCard } from '../../components/dashboard/StatsCard'
 import { RecentActivity } from '../../components/dashboard/RecentActivity'
 import { QuickActions } from '../../components/dashboard/QuickActions'
 import { EmptyDashboard } from '../../components/dashboard/EmptyDashboard'
 import { RepositorySelector } from '../../components/repository/RepositorySelector'
+import { AnalysisOverview } from '../../components/dashboard/AnalysisOverview'
 import { useRepositories } from '../../hooks/useRepositories'
 import { useAnalysisStore } from '../../stores/analysisStore'
 import { useAuthStore } from '../../stores/authStore'
@@ -30,6 +31,7 @@ interface DashboardStats {
 const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('7d')
   const [showRepoSelector, setShowRepoSelector] = useState(false)
+  const [viewMode, setViewMode] = useState<'overview' | 'analysis'>('overview')
   const { repoId } = useParams<{ repoId: string }>()
   const navigate = useNavigate()
   
@@ -69,7 +71,8 @@ const Dashboard = () => {
       toast.loading('Analyzing repository...', { id: 'analyze' })
       await analyzeRepository(currentRepo.full_name, token)
       toast.success('Analysis complete!', { id: 'analyze' })
-      navigate(`/dashboard/analysis/${currentRepo.id}`)
+      // Switch to analysis view instead of navigating away
+      setViewMode('analysis')
     } catch (error) {
       toast.error('Analysis failed. Please try again.', { id: 'analyze' })
     }
@@ -182,48 +185,100 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Time Range Selector */}
-        <div className="flex gap-2">
-          {(['24h', '7d', '30d'] as const).map((range) => (
-            <button
-              key={range}
-              onClick={() => setTimeRange(range)}
-              className={`
-                px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                ${timeRange === range
-                  ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.3)]'
-                  : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700'
-                }
-              `}
-            >
-              {range === '24h' ? 'Last 24 hours' : range === '7d' ? 'Last 7 days' : 'Last 30 days'}
-            </button>
-          ))}
+        {/* View Mode Toggle and Time Range Selector */}
+        <div className="flex items-center justify-between">
+          {/* View Mode Toggle */}
+          {currentAnalysis && (
+            <div className="flex bg-gray-800/50 backdrop-blur-sm rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('overview')}
+                className={`
+                  flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200
+                  ${viewMode === 'overview'
+                    ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.2)]'
+                    : 'text-gray-400 hover:text-white'
+                  }
+                `}
+              >
+                <BarChart3 className="w-4 h-4" />
+                Overview
+              </button>
+              <button
+                onClick={() => setViewMode('analysis')}
+                className={`
+                  flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200
+                  ${viewMode === 'analysis'
+                    ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.2)]'
+                    : 'text-gray-400 hover:text-white'
+                  }
+                `}
+              >
+                <Eye className="w-4 h-4" />
+                Analysis Insights
+              </button>
+            </div>
+          )}
+          
+          {/* Time Range Selector */}
+          <div className="flex gap-2">
+            {(['24h', '7d', '30d'] as const).map((range) => (
+              <button
+                key={range}
+                onClick={() => setTimeRange(range)}
+                className={`
+                  px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                  ${timeRange === range
+                    ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.3)]'
+                    : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700'
+                  }
+                `}
+              >
+                {range === '24h' ? 'Last 24 hours' : range === '7d' ? 'Last 7 days' : 'Last 30 days'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        {statCards.map((stat) => (
-          <StatsCard
-            key={stat.name}
-            name={stat.name}
-            value={stat.value}
-            icon={stat.icon}
-            color={stat.color}
-            isLoading={isLoading}
-          />
-        ))}
-      </div>
+      {/* Conditional Content Based on View Mode */}
+      {viewMode === 'overview' ? (
+        <>
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+            {statCards.map((stat) => (
+              <StatsCard
+                key={stat.name}
+                name={stat.name}
+                value={stat.value}
+                icon={stat.icon}
+                color={stat.color}
+                isLoading={isLoading}
+              />
+            ))}
+          </div>
 
-      {/* Recent Activity and Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RecentActivity 
-          activities={stats?.recentActivity || []} 
-          isLoading={isLoading} 
-        />
-        <QuickActions />
-      </div>
+          {/* Recent Activity and Quick Actions */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <RecentActivity 
+              activities={stats?.recentActivity || []} 
+              isLoading={isLoading} 
+            />
+            <QuickActions />
+          </div>
+        </>
+      ) : (
+        /* Analysis Overview Mode */
+        currentAnalysis && repoId ? (
+          <AnalysisOverview 
+            analysis={currentAnalysis} 
+            repositoryId={repoId}
+          />
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-400">No analysis data available. Run an analysis to see insights.</p>
+          </div>
+        )
+      )}
     </div>
   )
 }

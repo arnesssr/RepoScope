@@ -41,7 +41,7 @@ const TopNavBar = ({ onMenuClick }: TopNavBarProps) => {
   }, [])
 
   return (
-    <div className="sticky top-0 z-30 flex h-16 items-center gap-x-4 border-b border-gray-800 bg-gray-950/80 backdrop-blur-xl px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+    <div className="sticky top-0 z-50 flex h-16 items-center gap-x-4 border-b border-gray-800 bg-gray-950 backdrop-blur-xl px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
       {/* Mobile menu button */}
       <button
         onClick={onMenuClick}
