@@ -40,11 +40,11 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const navigationItems = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
-    { name: 'Activity', href: '/dashboard/activity', icon: Activity },
-    { name: 'Files', href: '/dashboard/files', icon: FolderOpen },
     { name: 'Timeline', href: '/dashboard/timeline', icon: Calendar },
     { name: 'Planning', href: '/dashboard/planning', icon: FileText },
     { name: 'Security', href: '/dashboard/threats', icon: Shield },
+    { name: 'Dependencies', href: '/dashboard/dependencies', icon: FolderOpen },
+    { name: 'Code Quality', href: '/dashboard/code-quality', icon: FileText },
   ]
 
   const isActive = (href: string) => {

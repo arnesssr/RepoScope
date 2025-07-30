@@ -10,10 +10,10 @@ import Analytics from './pages/Analytics'
 import Planning from './pages/Planning'
 import Threats from './pages/Threats'
 import Timeline from './pages/Timeline'
-import Activity from './pages/Activity'
-import Files from './pages/Files'
 import Settings from './pages/Settings'
 import Analysis from './pages/Analysis'
+import Dependencies from './pages/Dependencies'
+import CodeQuality from './pages/CodeQuality'
 import { useThemeStore } from './stores/themeStore'
 
 const queryClient = new QueryClient({
@@ -51,10 +51,10 @@ function App() {
             <Route path="planning" element={<Planning />} />
             <Route path="threats" element={<Threats />} />
             <Route path="timeline" element={<Timeline />} />
-            <Route path="activity" element={<Activity />} />
-            <Route path="files" element={<Files />} />
             <Route path="settings" element={<Settings />} />
             <Route path="analysis/:repoId" element={<Analysis />} />
+            <Route path="dependencies" element={<Dependencies />} />
+            <Route path="code-quality" element={<CodeQuality />} />
           </Route>
         </Routes>
       </Router>

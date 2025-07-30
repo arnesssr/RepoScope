@@ -20,6 +20,7 @@ interface AnalysisState {
   setSelectedRepository: (repositoryId: string | null) => void;
   clearAnalysis: () => void;
   loadAnalysisHistory: (repositoryId: string) => Promise<void>;
+  loadAnalysisForRepository: (repositoryFullName: string) => void;
 }
 
 export const useAnalysisStore = create<AnalysisState>()(
@@ -78,11 +79,25 @@ export const useAnalysisStore = create<AnalysisState>()(
         } catch (error) {
           console.error('Failed to load analysis history:', error);
         }
+      },
+      
+      loadAnalysisForRepository: (repositoryFullName: string) => {
+        const state = get();
+        const history = state.analysisHistory[repositoryFullName];
+        
+        // If we have analysis history for this repository, load the most recent one
+        if (history && history.length > 0) {
+          set({ currentAnalysis: history[0] });
+        } else {
+          // Clear current analysis if no history exists
+          set({ currentAnalysis: null });
+        }
       }
     }),
     {
       name: 'reposcope-analysis',
       partialize: (state) => ({
+        currentAnalysis: state.currentAnalysis,
         selectedRepository: state.selectedRepository,
         analysisHistory: state.analysisHistory
       })

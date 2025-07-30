@@ -1,10 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { Shield, AlertTriangle, CheckCircle, XCircle, Info, Scan } from 'lucide-react'
 import { ThreatOverview } from '../../components/threats/ThreatOverview'
 import { VulnerabilityList } from '../../components/threats/VulnerabilityList'
 import { SecurityMetrics } from '../../components/threats/SecurityMetrics'
 import { ThreatFilters } from '../../components/threats/ThreatFilters'
+import apiService from '../../services/api'
+import { useAuthStore } from '../../stores/authStore'
+import { RepositorySelector } from '../../components/repository/RepositorySelector'
+import { Repository } from '../../types'
 
 interface Vulnerability {
   id: string
@@ -41,93 +45,54 @@ const Threats = () => {
     status: 'open',
     type: 'all'
   })
-  const [view, setView] = useState<'overview' | 'vulnerabilities' | 'metrics'>('overview')
+  const [view, setView] = useState<'overview' | 'vulnerabilities' | 'metrics' | 'analysis'>('overview')
+  const [repositories, setRepositories] = useState<Repository[]>([])
+  const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null)
+
+  // Fetch repositories
+  const { data: repositoriesData } = useQuery({
+    queryKey: ['repositories'],
+    queryFn: async () => {
+      const { token } = useAuthStore.getState()
+      return apiService.getRepositories(token)
+    }
+  })
+
+  // Update repositories when data is fetched
+  useEffect(() => {
+    if (repositoriesData) {
+      setRepositories(repositoriesData)
+    }
+  }, [repositoriesData])
 
   const { data: securityScan, isLoading } = useQuery<SecurityScan>({
-    queryKey: ['security-scan'],
-    queryFn: async () => {
-      // Mock data for now
+    queryKey: ['security-scan', selectedRepo?.name],
+    enabled: !!selectedRepo,
+queryFn: async () => {
+      const { token } = useAuthStore.getState();
+      if (!selectedRepo) return null;
+      const vulnerabilities = await apiService.getVulnerabilities(selectedRepo.name, undefined, token);
+      const metrics = await apiService.getSecurityMetrics(selectedRepo.name, token);
       return {
         id: '1',
-        repository: 'RepoScope',
-        lastScanDate: new Date().toISOString(),
-        score: 85,
-        metrics: {
-          critical: 0,
-          high: 2,
-          medium: 5,
-          low: 8,
-          resolved: 12,
-          ignored: 3
-        },
-        vulnerabilities: [
-          {
-            id: '1',
-            title: 'Outdated dependency: lodash',
-            description: 'The lodash library version 4.17.20 has known security vulnerabilities',
-            severity: 'high',
-            status: 'open',
-            file: 'package.json',
-            line: 45,
-            type: 'dependency',
-            discoveredAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-          },
-          {
-            id: '2',
-            title: 'SQL Injection vulnerability',
-            description: 'Potential SQL injection in user input handling',
-            severity: 'critical',
-            status: 'resolved',
-            file: 'src/api/users.ts',
-            line: 123,
-            type: 'code',
-            discoveredAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-            resolvedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-          },
-          {
-            id: '3',
-            title: 'Exposed API key',
-            description: 'API key found in configuration file',
-            severity: 'high',
-            status: 'open',
-            file: 'config/api.js',
-            line: 15,
-            type: 'secret',
-            discoveredAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
-          },
-          {
-            id: '4',
-            title: 'Missing HTTPS enforcement',
-            description: 'Application does not enforce HTTPS connections',
-            severity: 'medium',
-            status: 'open',
-            file: 'server.js',
-            line: 78,
-            type: 'config',
-            discoveredAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
-          },
-          {
-            id: '5',
-            title: 'Weak password requirements',
-            description: 'Password policy allows weak passwords',
-            severity: 'medium',
-            status: 'ignored',
-            file: 'src/auth/validation.ts',
-            line: 34,
-            type: 'code',
-            discoveredAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
-          }
-        ]
-      }
+        repository: selectedRepo.name,
+        lastScanDate: new Date().toISOString(),  // Replace with actual last scan date
+        score: metrics.score,
+        metrics,
+        vulnerabilities,
+      };
     },
     refetchInterval: false,
     refetchOnMount: false,
   })
 
   const scanMutation = useMutation({
-    mutationFn: async () => {
-      // Mock security scan
-      return new Promise(resolve => setTimeout(resolve, 3000))
+mutationFn: async () => {
+      const { token } = useAuthStore.getState();
+      if (!selectedRepo) {
+        throw new Error('No repository selected');
+      }
+      await apiService.analyzeSecurity(selectedRepo.name, token);
     },
     onSuccess: () => {
       console.log('Security scan completed')
@@ -164,6 +129,11 @@ const Threats = () => {
               Monitor and manage security vulnerabilities in your repository
             </p>
           </div>
+          <RepositorySelector
+            repositories={repositories}
+            selectedRepo={selectedRepo}
+            onSelectRepo={setSelectedRepo}
+          />
           <button
             onClick={() => scanMutation.mutate()}
             disabled={scanMutation.isPending}
@@ -202,7 +172,7 @@ const Threats = () => {
       {/* View Tabs */}
       <div className="mb-8 border-b border-gray-800">
         <nav className="-mb-px flex space-x-8">
-          {['overview', 'vulnerabilities', 'metrics'].map((tab) => (
+          {['overview', 'vulnerabilities', 'metrics', 'analysis'].map((tab) => (
             <button
               key={tab}
               onClick={() => setView(tab as any)}

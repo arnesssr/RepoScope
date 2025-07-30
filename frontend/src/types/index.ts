@@ -27,6 +27,8 @@ export interface AnalysisResult {
   project_plan?: ProjectPlan;
   quality_assessment?: QualityAssessment;
   recent_commits?: Commit[];
+  dependency_analysis?: DependencyAnalysis;
+  security_analysis?: SecurityAnalysis;
 }
 
 export interface AnalysisSummary {
@@ -100,6 +102,62 @@ export interface User {
   name?: string;
   email?: string;
   avatar_url?: string;
+}
+
+// Dependency types
+export interface DependencyAnalysis {
+  total_dependencies: number;
+  outdated_dependencies: number;
+  vulnerabilities_count: number;
+  dependency_graph?: DependencyNode[];
+  critical_updates?: DependencyUpdate[];
+}
+
+export interface DependencyNode {
+  name: string;
+  version: string;
+  type: 'direct' | 'transitive';
+  outdated?: boolean;
+  vulnerabilities?: number;
+  children?: DependencyNode[];
+}
+
+export interface DependencyUpdate {
+  name: string;
+  current_version: string;
+  latest_version: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  breaking_changes?: boolean;
+}
+
+// Security types
+export interface SecurityAnalysis {
+  vulnerability_count: number;
+  critical_vulnerabilities: number;
+  security_score: number;
+  last_scan: string;
+  vulnerabilities?: Vulnerability[];
+}
+
+export interface Vulnerability {
+  id: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description: string;
+  package_name: string;
+  affected_versions: string;
+  fixed_version?: string;
+}
+
+// Code Quality Issue types
+export interface CodeQualityIssue {
+  id: string;
+  type: string;
+  severity: 'info' | 'warning' | 'error';
+  file: string;
+  line: number;
+  message: string;
+  rule: string;
 }
 
 // App state types

@@ -4,7 +4,8 @@ from contextlib import asynccontextmanager
 import logging
 from app.core.config import settings
 from app.api import auth, repositories
-# Disabled due to database dependencies:
+from app.api import dependencies, insights, performance, quality, security
+# Temporarily disabled due to SQLAlchemy/Python 3.13 compatibility issues
 # from app.api import analytics, projects
 # Commented out due to Python 3.13 compatibility issues
 # from app.core.database import engine
@@ -48,8 +49,16 @@ app.add_middleware(
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(repositories.router, prefix="/api/repositories", tags=["Repositories"])
-# app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])  # Disabled due to DB dependency
-# app.include_router(projects.router, prefix="/api/projects", tags=["Projects"])  # Disabled due to DB dependency
+# Temporarily disabled due to SQLAlchemy/Python 3.13 compatibility issues
+# app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
+# app.include_router(projects.router, prefix="/api/projects", tags=["Projects"])
+
+# Advanced Analytics routers
+app.include_router(dependencies.router, prefix="/api/dependencies", tags=["Dependencies"])
+app.include_router(insights.router, prefix="/api/insights", tags=["Insights"])
+app.include_router(performance.router, prefix="/api/performance", tags=["Performance"])
+app.include_router(quality.router, prefix="/api/quality", tags=["Quality"])
+app.include_router(security.router, prefix="/api/security", tags=["Security"])
 
 
 @app.get("/")

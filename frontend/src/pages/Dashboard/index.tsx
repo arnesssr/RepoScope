@@ -41,7 +41,8 @@ const Dashboard = () => {
     currentAnalysis, 
     isAnalyzing, 
     analyzeRepository,
-    setSelectedRepository 
+    setSelectedRepository,
+    loadAnalysisForRepository 
   } = useAnalysisStore()
   
   // Fetch repositories
@@ -56,6 +57,18 @@ const Dashboard = () => {
       setSelectedRepository(repoId)
     }
   }, [repoId, setSelectedRepository])
+  
+  // Load analysis from history when repository changes
+  useEffect(() => {
+    if (currentRepo?.full_name) {
+      loadAnalysisForRepository(currentRepo.full_name)
+      // If we have analysis data, show analysis view
+      const hasAnalysis = useAnalysisStore.getState().currentAnalysis
+      if (hasAnalysis) {
+        setViewMode('analysis')
+      }
+    }
+  }, [currentRepo?.full_name, loadAnalysisForRepository])
   
   // Handle repository selection
   const handleSelectRepo = (repo: Repository) => {

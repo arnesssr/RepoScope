@@ -14,6 +14,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { AnalysisResult } from '../../types';
 import { Card } from '../ui/Card';
+import { DependencySummaryWidget } from './DependencySummaryWidget';
+import { SecuritySummaryWidget } from './SecuritySummaryWidget';
 
 interface AnalysisOverviewProps {
   analysis: AnalysisResult;
@@ -162,6 +164,16 @@ export const AnalysisOverview: React.FC<AnalysisOverviewProps> = ({ analysis, re
           </Card>
         )}
       </div>
+
+{/* Dependency Summary */}
+      {analysis.dependency_analysis && (
+        <DependencySummaryWidget analysis={analysis.dependency_analysis} />
+      )}
+
+      {/* Security Summary */}
+      {analysis.security_analysis && (
+        <SecuritySummaryWidget analysis={analysis.security_analysis} />
+      )}
 
       {/* Quality Highlights */}
       {quality_assessment && (

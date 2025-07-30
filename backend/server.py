@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Header
+from fastapi import FastAPI, HTTPException, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 import httpx
@@ -187,6 +187,40 @@ async def get_dashboard_metrics(repo_id: str):
             "activity": {"last_commit": None}
         }
     }
+
+@app.post("/api/repositories/{repo_owner}/{repo_name}/analyze")
+async def analyze_repository(
+    repo_owner: str,
+    repo_name: str,
+    token: str = Query(..., description="GitHub access token")
+):
+    """Analyze a GitHub repository"""
+    from app.services.analysis.analyzer import RepositoryAnalyzer
+    
+    # Validate token
+    if not token:
+        raise HTTPException(status_code=401, detail="GitHub token is required")
+    
+    # Construct the full repository name and URL
+    repo_full_name = f"{repo_owner}/{repo_name}"
+    repo_url = f"https://github.com/{repo_full_name}"
+    
+    print(f"Analyzing repository: {repo_full_name}")
+    print(f"Repository URL: {repo_url}")
+    
+    try:
+        # Create analyzer instance
+        analyzer = RepositoryAnalyzer()
+        
+        # Run the analysis
+        result = analyzer.analyze_repository(repo_url, token)
+        
+        print(f"Analysis completed for {repo_full_name}")
+        return result
+        
+    except Exception as e:
+        print(f"Analysis failed for {repo_full_name}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
