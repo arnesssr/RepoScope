@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { BarChart3, TrendingUp, Activity, PieChart, Bug, GitBranch, Users } from 'lucide-react'
+import { BarChart3, TrendingUp, Activity, PieChart, Bug, GitBranch, Users, GitCommit } from 'lucide-react'
 import { CodeMetricsChart } from '../../components/analytics/CodeMetricsChart'
 import { ActivityHeatmap } from '../../components/analytics/ActivityHeatmap'
 import { LanguageDistribution } from '../../components/analytics/LanguageDistribution'
 import { CommitTrends } from '../../components/analytics/CommitTrends'
 import { ContributionDistribution } from '../../components/analytics/ContributionDistribution'
 import { AnalyticsFilters } from '../../components/analytics/AnalyticsFilters'
+import { CommitList } from '../../components/commits/CommitListSimple'
+import { CommitStats } from '../../components/commits/CommitStats'
+import { CommitFilters } from '../../components/commits/CommitFilters'
 import { useAnalysisStore } from '../../stores/analysisStore'
 import { useAuthStore } from '../../stores/authStore'
 import apiService from '../../services/api'
@@ -43,9 +46,20 @@ interface AnalyticsData {
 
 const Analytics = () => {
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d')
-  const [view, setView] = useState<'overview' | 'code' | 'activity' | 'trends'>('overview')
+  const [view, setView] = useState<'overview' | 'code' | 'activity' | 'trends' | 'commits'>('overview')
+  const [selectedContributor, setSelectedContributor] = useState<string | null>(null)
   const { currentAnalysis } = useAnalysisStore()
   const { token } = useAuthStore()
+
+  // Debug logging
+  useEffect(() => {
+    if (view === 'commits') {
+      console.log('=== COMMITS VIEW DEBUG ===')
+      console.log('Current Analysis:', currentAnalysis)
+      console.log('Recent Commits:', currentAnalysis?.recent_commits)
+      console.log('Contributors:', currentAnalysis?.repository_stats?.contributors)
+    }
+  }, [view, currentAnalysis])
 
   const { data: analytics, isLoading } = useQuery<AnalyticsData>({
     queryKey: ['analytics', timeRange, currentAnalysis],
@@ -154,7 +168,7 @@ const Analytics = () => {
       {/* View Tabs */}
       <div className="mb-8 border-b border-gray-800">
         <nav className="-mb-px flex space-x-8">
-          {['overview', 'code', 'activity', 'trends'].map((tab) => (
+          {['overview', 'code', 'activity', 'trends', 'commits'].map((tab) => (
             <button
               key={tab}
               onClick={() => setView(tab as any)}
@@ -263,6 +277,70 @@ const Analytics = () => {
                 Historical Trends
               </h3>
               <CommitTrends data={analytics?.commitTrends || []} />
+            </div>
+          )}
+
+          {view === 'commits' && (
+            <div className="space-y-6">
+              {!currentAnalysis ? (
+                <div className="text-center py-12 bg-gray-800 rounded-lg">
+                  <GitCommit className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+                  <h3 className="text-xl font-medium text-white mb-2">
+                    No repository analysis available
+                  </h3>
+                  <p className="text-gray-400">
+                    Please run an analysis first to see commit data.
+                    Go to the Analysis page from the sidebar to analyze a repository.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <CommitFilters 
+                    contributors={analytics?.contributors || []}
+                    selectedContributor={selectedContributor}
+                    onContributorSelect={setSelectedContributor}
+                    onFilterChange={(filters) => console.log('Filters changed:', filters)}
+                  />
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2">
+                      <div className="bg-gray-800 rounded-lg p-6">
+                        <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+                          <GitCommit className="h-5 w-5 text-cyan-400" />
+                          Contributor Commits
+                        </h3>
+                        <CommitList 
+                          contributors={analytics?.contributors || []}
+                          commits={currentAnalysis?.recent_commits || []}
+                          selectedContributor={selectedContributor}
+                          onMount={() => {
+                            console.log('CommitList mounted with:')
+                            console.log('Contributors:', analytics?.contributors)
+                            console.log('Commits:', currentAnalysis?.recent_commits)
+                            console.log('Selected Contributor:', selectedContributor)
+                          }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="lg:col-span-1">
+                      <div className="bg-gray-800 rounded-lg p-6">
+                        <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+                          <BarChart3 className="h-5 w-5 text-cyan-400" />
+                          Commit Statistics
+                        </h3>
+                        <CommitStats 
+                          stats={{
+                            totalCommits: currentAnalysis?.repository_stats?.total_commits || 0,
+                            contributors: analytics?.contributors || [],
+                            commitTrends: analytics?.commitTrends || []
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </>

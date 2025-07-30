@@ -85,9 +85,14 @@ async def get_vulnerabilities(
             repo_name, severity, limit, offset
         )
         
+        # Get the total count of vulnerabilities before pagination
+        all_vulnerabilities = security_analyzer.stored_vulnerabilities.get(repo_name, [])
+        if severity:
+            all_vulnerabilities = [v for v in all_vulnerabilities if v['severity'] == severity]
+        
         return {
             "vulnerabilities": vulnerabilities,
-            "total": len(vulnerabilities),
+            "total": len(all_vulnerabilities),
             "has_more": len(vulnerabilities) == limit
         }
     except Exception as e:
