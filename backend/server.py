@@ -5,6 +5,9 @@ import httpx
 import os
 from dotenv import load_dotenv
 
+# Import the security router
+from app.api import security
+
 # Load environment variables
 load_dotenv()
 
@@ -26,6 +29,9 @@ app.add_middleware(
 GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
 GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
 GITHUB_REDIRECT_URI = os.getenv("GITHUB_REDIRECT_URI", "http://localhost:3000/auth/callback")
+
+# Include the security router
+app.include_router(security.router, prefix="/api/security", tags=["Security"])
 
 @app.get("/")
 def read_root():

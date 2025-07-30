@@ -65,19 +65,47 @@ const Threats = () => {
     }
   }, [repositoriesData])
 
-  const { data: securityScan, isLoading } = useQuery<SecurityScan>({
+  const { data: securityScan, isLoading, refetch } = useQuery<SecurityScan>({
     queryKey: ['security-scan', selectedRepo?.name],
     enabled: !!selectedRepo,
 queryFn: async () => {
       const { token } = useAuthStore.getState();
       if (!selectedRepo) return null;
-      const vulnerabilities = await apiService.getVulnerabilities(selectedRepo.name, undefined, token);
-      const metrics = await apiService.getSecurityMetrics(selectedRepo.name, token);
+      
+      // Get vulnerabilities from API response
+      const vulnerabilitiesResponse = await apiService.getVulnerabilities(selectedRepo.full_name, undefined, token);
+      const vulnerabilities = vulnerabilitiesResponse.data?.vulnerabilities || [];
+      
+      // Get metrics from API response
+      const metricsResponse = await apiService.getSecurityMetrics(selectedRepo.full_name, token);
+      const metricsData = metricsResponse.data?.metrics || {};
+      
+      // Calculate score from vulnerabilities count
+      const score = Math.max(0, 100 - (vulnerabilities.length * 10));
+      
+      // Transform metrics to expected format
+      const metrics = {
+        critical: 0,
+        high: 0,
+        medium: 0,
+        low: 0,
+        resolved: 0,
+        ignored: 0,
+        ...metricsData
+      };
+      
+      // Count vulnerabilities by severity
+      vulnerabilities.forEach((vuln: any) => {
+        if (vuln.severity) {
+          metrics[vuln.severity] = (metrics[vuln.severity] || 0) + 1;
+        }
+      });
+      
       return {
         id: '1',
         repository: selectedRepo.name,
-        lastScanDate: new Date().toISOString(),  // Replace with actual last scan date
-        score: metrics.score,
+        lastScanDate: new Date().toISOString(),
+        score,
         metrics,
         vulnerabilities,
       };
@@ -92,10 +120,12 @@ mutationFn: async () => {
       if (!selectedRepo) {
         throw new Error('No repository selected');
       }
-      await apiService.analyzeSecurity(selectedRepo.name, token);
+      await apiService.analyzeSecurity(selectedRepo.full_name, token);
     },
     onSuccess: () => {
       console.log('Security scan completed')
+      // Refetch security data after successful scan
+      refetch()
     }
   })
 
@@ -129,19 +159,21 @@ mutationFn: async () => {
               Monitor and manage security vulnerabilities in your repository
             </p>
           </div>
-          <RepositorySelector
-            repositories={repositories}
-            selectedRepo={selectedRepo}
-            onSelectRepo={setSelectedRepo}
-          />
-          <button
-            onClick={() => scanMutation.mutate()}
-            disabled={scanMutation.isPending}
-            className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors flex items-center gap-2 disabled:opacity-50"
-          >
-            <Scan size={20} />
-            {scanMutation.isPending ? 'Scanning...' : 'Run Security Scan'}
-          </button>
+          <div className="flex items-center gap-4">
+            <RepositorySelector
+              repositories={repositories}
+              selectedRepo={selectedRepo}
+              onSelectRepo={setSelectedRepo}
+            />
+            <button
+              onClick={() => scanMutation.mutate()}
+              disabled={scanMutation.isPending || !selectedRepo}
+              className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+            >
+              <Scan size={20} />
+              {scanMutation.isPending ? 'Scanning...' : 'Run Security Scan'}
+            </button>
+          </div>
         </div>
       </div>
 

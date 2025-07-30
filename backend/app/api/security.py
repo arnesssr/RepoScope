@@ -3,7 +3,7 @@ Security API
 Handles endpoints related to security analysis and vulnerability scanning.
 """
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Header
 from typing import List, Optional
 from datetime import datetime
 
@@ -14,25 +14,51 @@ from ..services.git.git_service import GitService
 
 router = APIRouter()
 
+# Create a single instance of SecurityAnalyzer to persist data
+security_analyzer = SecurityAnalyzer()
+
 @router.post("/analyze")
 async def analyze_security(
     repo_name: str,
     branch: Optional[str] = "main",
+    authorization: Optional[str] = Header(None),
     # db=Depends(get_db)
 ):
     """Run security analysis on a repository."""
     try:
-        analyzer = SecurityAnalyzer()
         git_service = GitService()
         
-        # Clone or update repository
-        repo_path = await git_service.clone_or_update_repo(repo_name)
+        # Clone repository
+        # Check if repo_name contains a slash (owner/repo format)
+        if '/' in repo_name:
+            repo_url = f"https://github.com/{repo_name}"
+        else:
+            # If no owner specified, we need to get it from somewhere
+            # For now, return an error
+            raise HTTPException(
+                status_code=400, 
+                detail="Repository name must be in format 'owner/repository'"
+            )
+        
+        # Extract token from Authorization header
+        token = None
+        if authorization and authorization.startswith("Bearer "):
+            token = authorization.replace("Bearer ", "")
+        
+        # Clone with token if provided
+        repo_path = git_service.clone_repository(repo_url, access_token=token)
         
         # Run security analysis
-        report = await analyzer.analyze_repository(repo_path)
+        report = await security_analyzer.analyze_repository(repo_path)
         
-        # Save report to database
-# Database save to be implemented later
+        # Save vulnerabilities to in-memory storage
+        await security_analyzer.save_vulnerabilities(repo_name, report.vulnerabilities)
+
+        # Clean up the cloned repository
+        try:
+            git_service.cleanup(repo_path)
+        except:
+            pass  # Ignore cleanup errors
         
         return {
             "status": "success",
@@ -41,6 +67,8 @@ async def analyze_security(
             "vulnerabilities_found": len(report.vulnerabilities),
             "risk_score": report.risk_score
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -53,8 +81,7 @@ async def get_vulnerabilities(
 ):
     """Get vulnerabilities for a repository."""
     try:
-        analyzer = SecurityAnalyzer()
-        vulnerabilities = await analyzer.get_vulnerabilities(
+        vulnerabilities = await security_analyzer.get_vulnerabilities(
             repo_name, severity, limit, offset
         )
         
@@ -70,8 +97,7 @@ async def get_vulnerabilities(
 async def get_security_report(report_id: str):
     """Get a specific security report by ID."""
     try:
-        analyzer = SecurityAnalyzer()
-        report = await analyzer.get_report(report_id)
+        report = await security_analyzer.get_report(report_id)
         
         if not report:
             raise HTTPException(status_code=404, detail="Report not found")
@@ -86,8 +112,7 @@ async def get_security_report(report_id: str):
 async def get_security_metrics(repo_name: str):
     """Get security metrics for a repository."""
     try:
-        analyzer = SecurityAnalyzer()
-        metrics = await analyzer.calculate_metrics(repo_name)
+        metrics = await security_analyzer.calculate_metrics(repo_name)
         
         return {
             "metrics": metrics,
@@ -101,8 +126,7 @@ async def get_security_metrics(repo_name: str):
 async def scan_dependencies(repo_name: str):
     """Scan repository dependencies for vulnerabilities."""
     try:
-        analyzer = SecurityAnalyzer()
-        results = await analyzer.scan_dependencies(repo_name)
+        results = await security_analyzer.scan_dependencies(repo_name)
         
         return {
             "status": "success",
